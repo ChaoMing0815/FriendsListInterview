@@ -80,7 +80,7 @@ final class MergeFriendsUseCaseTests: XCTestCase {
 }
 
 
-// MARK: - Factory Method
+// MARK: - Factory Methods
 private extension MergeFriendsUseCaseTests {
     func mockFriend(fid: String, updateTime: TimeInterval) -> Friend {
         Friend(

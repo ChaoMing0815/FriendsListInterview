@@ -7,6 +7,12 @@
 
 import Foundation
 
+// MARK: - Response DTO
+struct FriendsResponseDTO: Codable {
+    let response: [FriendDTO]
+}
+
+// MARK: - Item DTO
 struct FriendDTO: Codable {
     let name: String
     let status: Int

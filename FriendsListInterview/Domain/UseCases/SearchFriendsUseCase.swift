@@ -9,10 +9,13 @@ import Foundation
 
 struct SearchFriendsUseCase {
     func searchFriends(query: String, in friends: [Friend]) -> [Friend] {
-        guard !query.isEmpty else { return friends }
+        /// 避免輸入空白鍵導致無法判讀
+        let keyword = query.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        return friends.filter {
-            $0.name.localizedStandardContains(query)
-        }
+        /// 清空搜尋欄後回傳原來好友清單
+        guard !keyword.isEmpty else { return friends }
+        
+        /// 使用修飾後的關鍵字進行篩選
+        return friends.filter { $0.name.localizedStandardContains(keyword) }
     }
 }

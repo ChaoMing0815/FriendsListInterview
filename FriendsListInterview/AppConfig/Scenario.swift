@@ -8,6 +8,7 @@
 import Foundation
 
 enum Scenario {
+    // MARK: - 三種題目情境
     case empty
     case friendsOnly
     case friendsWithInvites

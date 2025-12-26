@@ -8,16 +8,16 @@
 import Foundation
 
 enum APIConstants {
-    // MARK: - 用戶
+    // MARK: - User
     static let user = "https://dimanyen.github.io/man.json"
     
-    // MARK: - 好友列表無邀請
+    // MARK: - Friend List (No Invitation)
     static let friendList1 = "https://dimanyen.github.io/friend1.json"
     static let friendList2 = "https://dimanyen.github.io/friend2.json"
     
-    //MARK: - 好友列表含邀請
+    //MARK: - Friend List (With Invitation)
     static let friendList3 = "https://dimanyen.github.io/friend3.json"
     
-    //MARK: - 無好友
+    //MARK: - Empty Friend List
     static let friendList4 = "https://dimanyen.github.io/friend4.json"
 }

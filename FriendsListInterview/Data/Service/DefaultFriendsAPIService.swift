@@ -22,10 +22,10 @@ final class DefaultFriendsAPIService: FriendsAPIService {
     private let decoder: JSONDecoder
     private let friendsURL: URL
     
-    init(session: URLSession, decoder: JSONDecoder, url: URL) {
+    init( url: URL, session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
+        self.friendsURL = url
         self.session = session
         self.decoder = decoder
-        self.friendsURL = url
     }
     
     func fetchFriends() async throws -> [FriendDTO] {

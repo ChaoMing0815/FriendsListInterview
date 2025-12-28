@@ -8,5 +8,5 @@
 import Foundation
 
 protocol FriendsRepository {
-    func fetchFriends() async throws -> [Friend]
+    func fetchFriends(endpoint: String) async throws -> [Friend]
 }

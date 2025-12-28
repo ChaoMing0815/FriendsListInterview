@@ -9,39 +9,40 @@ import XCTest
 @testable import FriendsListInterview
 
 final class DefaultFriendsRepositoryTests: XCTestCase {
-    func test_fetchFriends_shouldMapFriendDTOsToFriends() async throws {
+    func test_fetchFriends_mapFriendDTOsToFriends() async throws {
         let service = MockFriendsAPIService()
         service.result = .success([
-            mockFriendDTO(name: "AAA", status: 1, isTop: "1", fid: "1", updateDate: "20001122"),
-            mockFriendDTO(name: "BBB", status: 2, isTop: "0",fid: "2", updateDate: "20001123"),
-            mockFriendDTO(name: "CCC", status: 1, isTop: "1",fid: "3", updateDate: "20001124")
+            mockFriendDTO(name: "黃靖僑", status: 1, isTop: "0", fid: "001", updateDate: "2019/08/02"),
+            mockFriendDTO(name: "翁勳儀", status: 1, isTop: "1", fid: "002", updateDate: "2019/08/01"),
+            mockFriendDTO(name: "林宜真", status: 1, isTop: "0", fid: "012", updateDate: "2019/08/01")
         ])
         
         let repository = DefaultFriendsRepository(service: service)
-        let friends = try await repository.fetchFriends()
+        let friends = try await repository.fetchFriends(endpoint: APIConstants.friendList2)
         
+        XCTAssertEqual(service.receivedEndpoint, APIConstants.friendList2)
         XCTAssertEqual(friends.count, 3)
         
         /// 測試 DTO -> Domain Model 是否轉換成功
-        let a = try XCTUnwrap(friends.first(where: { $0.fid == "1" }))
-        XCTAssertEqual(a.name, "AAA")
-        XCTAssertEqual(a.fid, "1")
+        let a = try XCTUnwrap(friends.first(where: { $0.fid == "001" }))
+        XCTAssertEqual(a.name, "黃靖僑")
+        XCTAssertEqual(a.fid, "001")
         XCTAssertEqual(a.status, .accepted)
-        XCTAssertEqual(a.isTop, true)
+        XCTAssertEqual(a.isTop, false)
         
         /// 測試日期字串是否轉換成功
-        let expectedDate = makeDate("20001122")
+        let expectedDate = makeDate("2019/08/02")
         XCTAssertEqual(a.updateDate, expectedDate)
         
         /// 其他條件測試
-        let b = try XCTUnwrap(friends.first(where: { $0.fid == "2" }))
-        XCTAssertEqual(b.name, "BBB")
-        XCTAssertEqual(b.fid, "2")
-        XCTAssertEqual(b.status, .sentInvitation)
-        XCTAssertEqual(b.isTop, false)
+        let b = try XCTUnwrap(friends.first(where: { $0.fid == "002" }))
+        XCTAssertEqual(b.name, "翁勳儀")
+        XCTAssertEqual(b.fid, "002")
+        XCTAssertEqual(b.status, .accepted)
+        XCTAssertEqual(b.isTop, true)
     }
     
-    func test_fetchFriends_shouldThrowError_whenServiceFails() async {
+    func test_fetchFriends_throwsError_whenServiceFails() async {
         enum DummyError: Error { case fail }
         
         let service = MockFriendsAPIService()
@@ -50,10 +51,12 @@ final class DefaultFriendsRepositoryTests: XCTestCase {
         let repository = DefaultFriendsRepository(service: service)
         
         do {
-            _ = try await repository.fetchFriends()
+            _ = try await repository.fetchFriends(endpoint: APIConstants.friendList1)
             XCTFail("Expected throw error, but succeeded.")
+        } catch let error as DummyError {
+            switch error { case .fail: break }
         } catch {
-            XCTAssertTrue(error is DummyError)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 }
@@ -61,14 +64,17 @@ final class DefaultFriendsRepositoryTests: XCTestCase {
 // MARK: - Mock FriendsAPIService
 final class MockFriendsAPIService: FriendsAPIService {
     var result: Result<[FriendDTO], Error> = .success([])
+    private(set) var receivedEndpoint: String?
     
     func fetchFriends(endpoint: String) async throws -> [FriendDTO] {
-        try result.get()
+        receivedEndpoint = endpoint
+        return try result.get()
     }
 }
 
 // MARK: - Helpers
 private extension DefaultFriendsRepositoryTests {
+    // MARK: - Make MockDTO
     func mockFriendDTO(name: String, status: Int, isTop: String, fid: String, updateDate: String) -> FriendDTO {
         let dto = FriendDTO(
             name: name,
@@ -80,11 +86,16 @@ private extension DefaultFriendsRepositoryTests {
         return dto
     }
     
-    func makeDate(_ yyyymmdd: String) -> Date {
+    // MARK: - DateFormatter
+    static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
+        formatter.dateFormat = "yyyy/MM/dd"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.date(from: yyyymmdd) ?? .distantPast
+        return formatter
+    }()
+    
+    func makeDate(_ string: String) -> Date {
+        return Self.dateFormatter.date(from: string) ?? .distantPast
     }
 }

@@ -8,5 +8,5 @@
 import Foundation
 
 protocol FriendsAPIService {
-    func fetchFriends() async throws -> [FriendDTO]
+    func fetchFriends(endpoint: String) async throws -> [FriendDTO]
 }

@@ -62,7 +62,7 @@ final class DefaultFriendsRepositoryTests: XCTestCase {
 final class MockFriendsAPIService: FriendsAPIService {
     var result: Result<[FriendDTO], Error> = .success([])
     
-    func fetchFriends() async throws -> [FriendDTO] {
+    func fetchFriends(endpoint: String) async throws -> [FriendDTO] {
         try result.get()
     }
 }

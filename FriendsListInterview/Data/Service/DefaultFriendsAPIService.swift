@@ -20,15 +20,16 @@ enum FriendsAPIServiceError: Error {
 final class DefaultFriendsAPIService: FriendsAPIService {
     private let session: URLSession
     private let decoder: JSONDecoder
-    private let friendsURL: URL
     
-    init( url: URL, session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
-        self.friendsURL = url
+    init(session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
         self.session = session
         self.decoder = decoder
     }
     
-    func fetchFriends() async throws -> [FriendDTO] {
+    func fetchFriends(endpoint:String) async throws -> [FriendDTO] {
+        guard let friendsURL = URL(string: endpoint) else {
+            throw FriendsAPIServiceError.invalidURL
+        }
         let (data, response) = try await session.data(from: friendsURL)
         
         guard let httpResponse = response as? HTTPURLResponse else {

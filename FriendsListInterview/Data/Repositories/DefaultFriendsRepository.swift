@@ -15,7 +15,7 @@ final class DefaultFriendsRepository: FriendsRepository {
     }
     
     func fetchFriends() async throws -> [Friend] {
-        let dtos = try await self.service.fetchFriends()
+        let dtos = try await self.service.fetchFriends(endpoint: "https://test.com/friend.json")
         let friends = dtos.map { $0.toDomain() }
         return friends
     }

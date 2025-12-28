@@ -33,12 +33,11 @@ final class DefaultFriendsAPIServiceTests: XCTestCase {
         }
         
         let service = DefaultFriendsAPIService(
-            url: URL(string: "https://servicetest.com")!,
             session: makeMockURLSession(),
             decoder: JSONDecoder()
         )
         
-        let dtos = try await service.fetchFriends()
+        let dtos = try await service.fetchFriends(endpoint: "https://test.com/friend.json")
         
         XCTAssertEqual(dtos.count, 1)
         XCTAssertEqual(dtos.first?.fid, "001")
@@ -56,13 +55,12 @@ final class DefaultFriendsAPIServiceTests: XCTestCase {
         }
         
         let service = DefaultFriendsAPIService(
-            url: URL(string: "https://servicetest.com")!,
             session: makeMockURLSession(),
             decoder: JSONDecoder()
         )
         
         do {
-            _ = try await service.fetchFriends()
+            _ = try await service.fetchFriends(endpoint: "https://test.com/friend.json")
             XCTFail("Expected httpStatusCode error, but succeeded.")
         } catch let error as FriendsAPIServiceError {
             if case .httpStatusCode(500) = error {
@@ -90,13 +88,12 @@ final class DefaultFriendsAPIServiceTests: XCTestCase {
         }
         
         let service = DefaultFriendsAPIService(
-            url: URL(string: "https://servicetest.com")!,
             session: makeMockURLSession(),
             decoder: JSONDecoder()
         )
         
         do {
-            _ = try await service.fetchFriends()
+            _ = try await service.fetchFriends(endpoint: "https://test.com/friend.json")
             XCTFail("Expected decoing error, but succeeded.")
         } catch let error as FriendsAPIServiceError {
             if case .decodingError(_) = error {
@@ -106,6 +103,27 @@ final class DefaultFriendsAPIServiceTests: XCTestCase {
             }
         } catch {
             XCTFail("Expected FriendsAPIServiceError, but got \(error)")
+        }
+    }
+    
+    func test_fetchFriends_throwsError_whenInvalidURL() async {
+        let service = DefaultFriendsAPIService(
+            session: makeMockURLSession(),
+            decoder: JSONDecoder()
+        )
+        
+        do {
+            _ = try await service.fetchFriends(endpoint: "")
+            XCTFail("Expected invalidURL error, but got succeeded.")
+        } catch let error as FriendsAPIServiceError {
+            switch error {
+            case .invalidURL:
+                XCTAssertTrue(true)
+            default:
+                XCTFail("Expected invalidURL error, but got \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
 }

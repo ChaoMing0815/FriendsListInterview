@@ -9,7 +9,6 @@ import Foundation
 import UIKit
 
 final class UserInfoView: UIView {
-
     // MARK: - UI Components
     private let nameLabel = UILabel()
     private let subtitleLabel = UILabel()
@@ -115,7 +114,7 @@ private extension UserInfoView {
         chevronButton.translatesAutoresizingMaskIntoConstraints = false
 
         // 用 system chevron 先當 placeholder（之後要換成 Zeplin asset 再改）
-        chevronButton.setImage(UIImage(systemName: "chevron.right"), for: .normal)
+        chevronButton.setImage(UIImage(named: "icInfoBackDeepGray"), for: .normal)
         chevronButton.tintColor = .secondaryLabel
 
         // 不做互動（但保留 UIButton 身份）

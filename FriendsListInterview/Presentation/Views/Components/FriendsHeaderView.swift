@@ -18,7 +18,7 @@ final class FriendsHeaderView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .systemBackground
+        backgroundColor = UIColor(red: 252/255, green: 252/255, blue: 252/255, alpha: 1)
         addSubview(label)
         NSLayoutConstraint.activate([
             label.centerXAnchor.constraint(equalTo: centerXAnchor),

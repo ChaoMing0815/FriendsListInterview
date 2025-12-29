@@ -10,7 +10,7 @@ import UIKit
 
 @MainActor
 final class ScenarioSelectorViewController: UIViewController {
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -62,8 +62,9 @@ private extension ScenarioSelectorViewController {
             repository: repository
         )
         
-        let viewController = FriendsListViewController(viewModel: viewModel)
-        navigationController?.pushViewController(viewController, animated: true)
+        let listViewController = FriendsListViewController(viewModel: viewModel)
+        let containerViewController = FriendsContainerViewController(contentViewController: listViewController)
+        navigationController?.pushViewController(containerViewController, animated: true)
     }
     
     @objc func emptyTapped() {

@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "icNavPinkTransfer.png",
+      "filename" : "icNavPinkWithdraw.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icNavPinkTransfer@2x.png",
+      "filename" : "icNavPinkWithdraw@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "icNavPinkTransfer@3x.png",
+      "filename" : "icNavPinkWithdraw@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

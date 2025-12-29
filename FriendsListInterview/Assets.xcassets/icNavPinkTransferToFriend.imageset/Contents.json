@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "icNavPinkTransfer.png",
+      "filename" : "icTabbarFriendsOn.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icNavPinkTransfer@2x.png",
+      "filename" : "icTabbarFriendsOn@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "icNavPinkTransfer@3x.png",
+      "filename" : "icTabbarFriendsOn@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

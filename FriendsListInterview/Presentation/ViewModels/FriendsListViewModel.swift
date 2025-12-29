@@ -80,9 +80,37 @@ private extension FriendsListViewModel {
             return
         }
         
-        let receivedInvitations = friends.filter { $0.status == .receivedInvitation }
-        let friendsAndSentInvitations = friends.filter { $0.status == .accepted || $0.status == .sentInvitation }
+        let receivedInvitations = friends
+            .filter { $0.status == .receivedInvitation }
+            .sorted { $0.fid < $1.fid }
+        
+        let friendsAndSentInvitations = friends
+            .filter { $0.status == .accepted || $0.status == .sentInvitation }
+            .sorted { lhs, rhs in
+                let leftRank = rank(lhs)
+                let rightRank = rank(rhs)
+                
+                if leftRank != rightRank {
+                    return leftRank < rightRank
+                }
+                return lhs.fid < rhs.fid
+            }
         
         state = .content(receivedInvitations: receivedInvitations, friends: friendsAndSentInvitations)
+    }
+    
+    /// 優化 FriendsList 排序
+    func rank(_ friend: Friend) -> Int {
+        switch friend.status {
+            /// status = 2
+            case .sentInvitation:
+                return 0
+            /// status = 1
+            case .accepted:
+                return friend.isTop ? 1 : 2
+            /// status = 0
+            case .receivedInvitation:
+                return 999
+        }
     }
 }

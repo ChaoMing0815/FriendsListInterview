@@ -98,6 +98,7 @@ final class InvitationCell: UITableViewCell {
         super.prepareForReuse()
         avatarView.image = nil
         nameLabel.text = nil
+        subtitleLabel.text = nil
         onAcceptTapped = nil
         onDeclineTapped = nil
     }

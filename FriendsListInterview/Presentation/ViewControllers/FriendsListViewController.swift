@@ -19,9 +19,10 @@ final class FriendsListViewController: UIViewController {
     private let emptyView = EmptyStateView()
     
     // 有好友情境 UI
-    private let tableView = UITableView(frame: .zero, style: .grouped)
+    private let tableView = UITableView(frame: .zero, style: .plain)
     private var receivedInvitations: [Friend] = []
     private var friends: [Friend] = []
+    private var hasInvitations: Bool { !receivedInvitations.isEmpty }
     
     init(viewModel: FriendsListViewModel) {
         self.viewModel = viewModel
@@ -47,6 +48,7 @@ final class FriendsListViewController: UIViewController {
 
 // MARK: - Helpers
 private extension FriendsListViewController {
+    // MARK: - View For Empty State
     func setupEmptyView() {
         view.addSubview(emptyView)
         emptyView.translatesAutoresizingMaskIntoConstraints = false
@@ -66,8 +68,10 @@ private extension FriendsListViewController {
         }
     }
     
+    // MARK: - TableView For State With Friends
     func setupTableView() {
         view.addSubview(tableView)
+        
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -76,12 +80,38 @@ private extension FriendsListViewController {
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
             ])
         
+        tableView.backgroundColor = .systemGroupedBackground
+        tableView.clipsToBounds = false
+        
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        
+        tableView.sectionHeaderTopPadding = 0
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 76
+        
+        // DataSource And Delegate
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        
+        // Cell Registration
+        tableView.register(InvitationCell.self, forCellReuseIdentifier: InvitationCell.reuseIdentifier)
+        tableView.register(FriendCell.self, forCellReuseIdentifier: FriendCell.reuseIdentifier)
         
         /// 初始狀態不顯示
         tableView.isHidden = true
+    }
+    
+    // MARK: - TableView Section Type
+    func sectionType(for section: Int) -> SectionType {
+        if hasInvitations { return section == 0 ? .invitations : .friends }
+        return .friends
+    }
+    
+    enum SectionType {
+        case invitations
+        case friends
     }
     
     func setupLoadingIndicator() {
@@ -133,35 +163,56 @@ private extension FriendsListViewController {
 // MARK: - UITableViewDelegate and UITableViewDataSource
 extension FriendsListViewController: UITableViewDelegate, UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 2
+        return hasInvitations ? 2 : 1
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch section {
-        case 0: return receivedInvitations.count
-        case 1: return friends.count
-        default : return 0
+        if hasInvitations {
+            return section == 0 ?  receivedInvitations.count : friends.count
+        } else {
+            return friends.count
         }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        
-        let friend: Friend
-        if indexPath.section == 0 {
-            friend = receivedInvitations[indexPath.row]
-            cell.textLabel?.text = "邀請：\(friend.name)"
-        } else {
-            friend = friends[indexPath.row]
-            cell.textLabel?.text = friend.name
+        switch sectionType(for: indexPath.section) {
+        case .invitations:
+            let cell = tableView.dequeueReusableCell(withIdentifier: InvitationCell.reuseIdentifier, for: indexPath) as! InvitationCell
+            let friend = receivedInvitations[indexPath.row]
+            cell.configure(name: friend.name)
+            cell.onAcceptTapped = { [weak self] in
+                self?.presentPlaceholderAlert()
+            }
+            cell.onDeclineTapped = { [weak self] in
+                self?.presentPlaceholderAlert()
+            }
+            return cell
+        case .friends:
+            let cell = tableView.dequeueReusableCell(withIdentifier: FriendCell.reuseIdentifier, for: indexPath) as! FriendCell
+            let friend = friends[indexPath.row]
+            cell.configure(name: friend.name, status: friend.status, isTop: friend.isTop)
+            cell.onTransferTapped = { [weak self] in
+                self?.presentPlaceholderAlert()
+            }
+            cell.onMoreTapped = { [weak self] in
+                self?.presentPlaceholderAlert()
+            }
+            return cell
         }
-        return cell
     }
     
+    // MARK: - HeaderView For TableView
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 {
-            return receivedInvitations.isEmpty ? nil : "收到的好友邀請"
+        switch sectionType(for: section) {
+        case .invitations:
+            return "邀請"
+        case .friends:
+            return "好友"
         }
-        return "好友"
     }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 36
+    }
+
 }

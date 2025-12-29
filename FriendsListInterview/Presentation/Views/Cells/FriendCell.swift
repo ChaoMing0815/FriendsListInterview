@@ -14,6 +14,9 @@ final class FriendCell: UITableViewCell {
     var onTransferTapped: (() -> Void)?
     var onMoreTapped: (() -> Void)?
     
+    private var transferTrailingToContentConstraint: NSLayoutConstraint!
+    private var transferTrailingToPendingConstraint: NSLayoutConstraint!
+    
     // MARK: - UI
     private let avatarImageView: UIImageView = {
         let imageView = UIImageView()
@@ -25,10 +28,10 @@ final class FriendCell: UITableViewCell {
     }()
     
     private let topStarView: UIImageView = {
-        let imageView = UIImageView(image: UIImage(systemName: "star.fill"))
-        imageView.tintColor = .systemYellow
+        let imageView = UIImageView(image: UIImage(named: "icFriendsStar"))
+        imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.isHidden = true
+        imageView.alpha = 0 /// 預設不顯示
         return imageView
     }()
     
@@ -43,39 +46,42 @@ final class FriendCell: UITableViewCell {
     }()
     
     private let transferButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-            config.title = "轉帳"
-            config.baseForegroundColor = .systemPink
-            config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
-
-            let button = UIButton(configuration: config)
-            button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
-            button.layer.cornerRadius = 6
-            button.layer.borderWidth = 1
-            button.layer.borderColor = UIColor.systemPink.cgColor
-            button.translatesAutoresizingMaskIntoConstraints = false
-            return button
+        var config = UIButton.Configuration.bordered()
+        config.title = "轉帳"
+        config.baseForegroundColor = .systemPink
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+        
+        config.background.strokeColor = .systemPink
+        config.background.strokeWidth = 1
+        config.background.cornerRadius = 2
+        config.background.backgroundColor = .clear
+        
+        let button = UIButton(configuration: config)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
-    private let pendingLabel: UILabel = {
-        let label = UILabel()
-        label.text = "邀請中"
-        label.font = .systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = .secondaryLabel
-        label.textAlignment = .center
-        label.layer.cornerRadius = 6
-        label.layer.borderWidth = 1
-        label.layer.borderColor = UIColor.systemGray4.cgColor
-        label.clipsToBounds = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
+    private let pendingButton: UIButton = {
+        var config = UIButton.Configuration.bordered()
+        config.title = "邀請中"
+        config.baseForegroundColor = .systemGray3
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+        
+        config.background.strokeColor = .systemGray3
+        config.background.strokeWidth = 1
+        config.background.cornerRadius = 2
+        config.background.backgroundColor = .clear
+        
+        let button = UIButton(configuration: config)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }()
     
     private let moreButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        button.setImage(UIImage(systemName: "ellipsis", withConfiguration:  config),for: .normal)
+        button.setImage(UIImage(named: "icFriendsMore"),for: .normal)
         button.tintColor = .systemGray3
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -84,6 +90,8 @@ final class FriendCell: UITableViewCell {
     // MARK: - Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        preservesSuperviewLayoutMargins = true
+        contentView.preservesSuperviewLayoutMargins = true
         selectionStyle = .none
         setupLayout()
         setActions()
@@ -98,36 +106,65 @@ final class FriendCell: UITableViewCell {
         super.prepareForReuse()
         avatarImageView.image = nil
         nameLabel.text = nil
-        topStarView.isHidden = true
-        transferButton.isHidden = false
-        pendingLabel.isHidden = true
-        moreButton.isHidden = false
+        topStarView.alpha = 0
+        transferButton.alpha = 1
+        pendingButton.alpha = 0
+        moreButton.alpha = 1
         onTransferTapped = nil
         onMoreTapped = nil
+        
+        transferTrailingToContentConstraint.isActive = true
+        transferTrailingToPendingConstraint.isActive = false
+        
+        transferButton.isUserInteractionEnabled = true
+        pendingButton.isUserInteractionEnabled = false
+        moreButton.isUserInteractionEnabled = true
     }
     
     // MARK: - Configure
     func configure(name: String, status: FriendStatus, isTop: Bool, avatar: UIImage? = nil) {
         nameLabel.text = name
         avatarImageView.image = avatar ?? UIImage(systemName: "person.crop.circle.fill")
-        topStarView.isHidden = !isTop
+        topStarView.alpha = isTop ? 1 : 0
         
         switch status {
         case .accepted:
-            transferButton.isHidden = false
-            pendingLabel.isHidden = true
-            moreButton.isHidden = false
-       
-        case .sentInvitation:
-            transferButton.isHidden = false
-            pendingLabel.isHidden = false
-            moreButton.isHidden = true
+            transferTrailingToContentConstraint.isActive = true
+            transferTrailingToPendingConstraint.isActive = false
             
+            transferButton.alpha = 1
+            pendingButton.alpha = 0
+            moreButton.alpha = 1
+            
+            transferButton.isUserInteractionEnabled = true
+            moreButton.isUserInteractionEnabled = true
+            pendingButton.isUserInteractionEnabled = false
+
+        case .sentInvitation:
+            transferTrailingToContentConstraint.isActive = false
+            transferTrailingToPendingConstraint.isActive = true
+            
+            transferButton.alpha = 1
+            pendingButton.alpha = 1
+            moreButton.alpha = 0
+            
+            transferButton.isUserInteractionEnabled = true
+            pendingButton.isUserInteractionEnabled = false
+            moreButton.isUserInteractionEnabled = false
+   
         case .receivedInvitation:
-            transferButton.isHidden = true
-            pendingLabel.isHidden = true
-            moreButton.isHidden = true
+            transferTrailingToContentConstraint.isActive = true
+            transferTrailingToPendingConstraint.isActive = false
+            
+            transferButton.alpha = 0
+            pendingButton.alpha = 0
+            moreButton.alpha = 0
+            
+            transferButton.isUserInteractionEnabled = false
+            pendingButton.isUserInteractionEnabled = false
+            moreButton.isUserInteractionEnabled = false
         }
+        contentView.setNeedsLayout()
     }
 }
 
@@ -135,31 +172,47 @@ final class FriendCell: UITableViewCell {
 private extension FriendCell {
     // MARK: - Setup Layout
     func setupLayout() {
-        let leftStack = makeStackView(axis: .horizontal, spacing: 10, alignment: .center, arrangedSubviews: [topStarView, avatarImageView, nameLabel])
+        let leftStack = makeStackView(axis: .horizontal, spacing: 0, alignment: .center, arrangedSubviews: [topStarView, avatarImageView, nameLabel])
         
-        let rightStack = makeStackView(axis: .horizontal, spacing: 8, alignment: .center, arrangedSubviews: [transferButton, pendingLabel, moreButton])
         
-        let rootStack = makeStackView(axis: .horizontal, spacing: 12, alignment:  .center, arrangedSubviews: [leftStack, spacer(), rightStack])
+        contentView.addSubview(leftStack)
+        contentView.addSubview(transferButton)
+        contentView.addSubview(pendingButton)
+        contentView.addSubview(moreButton)
         
-        contentView.addSubview(rootStack)
+        leftStack.setCustomSpacing(6, after: topStarView)
+        leftStack.setCustomSpacing(15, after: avatarImageView)
+        
+        transferTrailingToContentConstraint = transferButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -53)
+        transferTrailingToPendingConstraint = transferButton.trailingAnchor.constraint(equalTo: pendingButton.layoutMarginsGuide.leadingAnchor, constant: -10)
         
         NSLayoutConstraint.activate([
-            rootStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
-            rootStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            rootStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            rootStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            leftStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 10),
+            leftStack.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
             avatarImageView.widthAnchor.constraint(equalToConstant: 40),
             avatarImageView.heightAnchor.constraint(equalToConstant: 40),
             
-            topStarView.widthAnchor.constraint(equalToConstant: 16),
-            topStarView.heightAnchor.constraint(equalToConstant: 16),
+            topStarView.widthAnchor.constraint(equalToConstant: 14),
+            topStarView.heightAnchor.constraint(equalToConstant: 14),
             
-            pendingLabel.heightAnchor.constraint(equalToConstant: 32),
-            pendingLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 80),
+            nameLabel.heightAnchor.constraint(equalToConstant: 22),
             
-            moreButton.widthAnchor.constraint(equalToConstant: 32),
-            moreButton.heightAnchor.constraint(equalToConstant: 32)
+            moreButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -10),
+            moreButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            moreButton.widthAnchor.constraint(equalToConstant: 18),
+            moreButton.heightAnchor.constraint(equalToConstant: 18),
+            
+            pendingButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            pendingButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            pendingButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 60),
+            pendingButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            transferButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            transferButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 47),
+            transferButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: transferButton.leadingAnchor, constant: -8)
         ])
     }
     

@@ -13,7 +13,6 @@ final class FriendsHeaderView: UIView {
 
     private let toolsBarView = ToolsBarView()
     private let userInfoView = UserInfoView()
-    private let friendsSegmentView = FriendsSegmentView()
 
     // MARK: - Init
 
@@ -38,13 +37,11 @@ private extension FriendsHeaderView {
 
         addSubview(toolsBarView)
         addSubview(userInfoView)
-        addSubview(friendsSegmentView)
     }
 
     func setupConstraints() {
         toolsBarView.translatesAutoresizingMaskIntoConstraints = false
         userInfoView.translatesAutoresizingMaskIntoConstraints = false
-        friendsSegmentView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             // ToolsBar
@@ -59,14 +56,6 @@ private extension FriendsHeaderView {
             userInfoView.trailingAnchor.constraint(equalTo: trailingAnchor),
             userInfoView.heightAnchor.constraint(equalToConstant: 64),
 
-            // Segment
-            friendsSegmentView.topAnchor.constraint(equalTo: userInfoView.bottomAnchor),
-            friendsSegmentView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            friendsSegmentView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            friendsSegmentView.heightAnchor.constraint(equalToConstant: 37),
-
-            // Bottom
-            friendsSegmentView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
     }
 }

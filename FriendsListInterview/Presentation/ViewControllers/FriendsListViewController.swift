@@ -19,6 +19,7 @@ final class FriendsListViewController: UIViewController {
     private let invitationsContainerView = UIView()
     private let invitationCollectionView = InvitationCollectionView()
     private let segmentContainerView = UIView()
+    private let segmentView = FriendsSegmentView()
     
     private var invitationsHeightConstraint: NSLayoutConstraint?
     private var segmentHeightConstraint: NSLayoutConstraint?
@@ -86,7 +87,7 @@ private extension FriendsListViewController {
         contentStackView.distribution = .fill
         contentStackView.spacing = 0
 
-        configureInvitationsPlaceholder()
+        configureInvitationsCollectionView()
         configureSegmentPlaceholder()
 
         contentStackView.addArrangedSubview(invitationsContainerView)
@@ -194,8 +195,14 @@ private extension FriendsListViewController {
             self.allFriends = friends
             applySearchFilter()
             
+            self.receivedInvitations = receivedInvitations
             invitationCollectionView.update(invitations: receivedInvitations)
-            invitationCollectionView.setDisplayMode(.expanded, animated: false)
+            
+            if receivedInvitations.isEmpty {
+                invitationsHeightConstraint?.constant = 0
+            } else {
+                invitationCollectionView.setDisplayMode(.expanded, animated: false)
+            }
         }
     }
     
@@ -236,7 +243,7 @@ private extension FriendsListViewController {
     }
     
     // MARK: - Setup PlaceHolder
-    func configureInvitationsPlaceholder() {
+    func configureInvitationsCollectionView() {
         invitationsContainerView.backgroundColor = .clear
 
         invitationsContainerView.addSubview(invitationCollectionView)
@@ -269,7 +276,6 @@ private extension FriendsListViewController {
         invitationCollectionView.onAcceptTapped = { [weak self] _ in
             self?.presentPlaceholderAlert()
         }
-        
         invitationCollectionView.onDeclineTapped = { [weak self] _ in
             self?.presentPlaceholderAlert()
         }
@@ -277,19 +283,18 @@ private extension FriendsListViewController {
 
     func configureSegmentPlaceholder() {
         segmentContainerView.backgroundColor = .clear
-
-        let label = UILabel()
-        label.text = "Segment Placeholder"
-        label.font = .systemFont(ofSize: 12)
-        label.textColor = .secondaryLabel
-
-        segmentContainerView.addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
+       
+        segmentContainerView.subviews.forEach { $0.removeFromSuperview() }
+        
+        segmentContainerView.addSubview(segmentView)
+        segmentView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: segmentContainerView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: segmentContainerView.centerYAnchor)
+            segmentView.topAnchor.constraint(equalTo: segmentContainerView.topAnchor),
+            segmentView.leadingAnchor.constraint(equalTo: segmentContainerView.leadingAnchor),
+            segmentView.trailingAnchor.constraint(equalTo: segmentContainerView.trailingAnchor),
+            segmentView.bottomAnchor.constraint(equalTo: segmentContainerView.bottomAnchor)
         ])
-
+        
         if segmentHeightConstraint == nil {
             segmentHeightConstraint = segmentContainerView.heightAnchor.constraint(equalToConstant: 37)
             segmentHeightConstraint?.isActive = true

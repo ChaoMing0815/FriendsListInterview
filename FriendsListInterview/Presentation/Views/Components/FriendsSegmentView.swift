@@ -45,18 +45,21 @@ private extension FriendsSegmentView {
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Section height: 37pt
-            heightAnchor.constraint(equalToConstant: 37),
-            
-            // StackView: leading 30 (延續 header 左邊界風格，可依你 header 規劃再調)
+            // StackView
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 30),
-            stackView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 5),
             
-            // Underline: width 20, height 4, 文字到底線 6
+            // Underline
             underlineView.widthAnchor.constraint(equalToConstant: 20),
             underlineView.heightAnchor.constraint(equalToConstant: 4),
             underlineView.centerXAnchor.constraint(equalTo: friendsLabel.centerXAnchor),
-            underlineView.topAnchor.constraint(equalTo: friendsLabel.bottomAnchor, constant: 6)
+            underlineView.topAnchor.constraint(equalTo: friendsLabel.bottomAnchor, constant: 6),
+            
+            // 保險：避免 underline 被推到 view 外面
+            underlineView.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -4),
+            
+            // 也加一個底部保險，避免 stackView 在極端情況被撐爆
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -4)
         ])
     }
 }

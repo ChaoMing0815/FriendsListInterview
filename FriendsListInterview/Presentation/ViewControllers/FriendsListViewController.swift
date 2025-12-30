@@ -190,15 +190,12 @@ private extension FriendsListViewController {
             loadingIndicator.stopAnimating()
             contentStackView.isHidden = false
             emptyView.isHidden = true
-            
-            self.receivedInvitations = receivedInvitations
-            invitationCollectionView.update(invitations: receivedInvitations)
 
-            let shouldShowInvitations = !receivedInvitations.isEmpty
-            invitationsHeightConstraint?.constant = shouldShowInvitations ? 86 : 0
-            
             self.allFriends = friends
             applySearchFilter()
+            
+            invitationCollectionView.update(invitations: receivedInvitations)
+            invitationCollectionView.setDisplayMode(.expanded, animated: false)
         }
     }
     
@@ -254,6 +251,19 @@ private extension FriendsListViewController {
         if invitationsHeightConstraint == nil {
             invitationsHeightConstraint = invitationsContainerView.heightAnchor.constraint(equalToConstant: 0)
             invitationsHeightConstraint?.isActive = true
+        }
+        
+        invitationCollectionView.onPreferredHeightChanged = { [weak self] height, animated in
+            guard let self else { return }
+            self.invitationsHeightConstraint?.constant = height
+            
+            if animated {
+                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.9, initialSpringVelocity: 0.2, options: [.curveEaseInOut]) {
+                    self.view.layoutIfNeeded()
+                }
+            } else {
+                self.view.layoutIfNeeded()
+            }
         }
         
         invitationCollectionView.onAcceptTapped = { [weak self] _ in

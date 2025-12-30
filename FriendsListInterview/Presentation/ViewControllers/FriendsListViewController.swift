@@ -24,6 +24,9 @@ final class FriendsListViewController: UIViewController {
     private var invitationsHeightConstraint: NSLayoutConstraint?
     private var segmentHeightConstraint: NSLayoutConstraint?
     
+    private var lastInvitationsHeight: CGFloat = 0
+    private let defaultSegmentHeight: CGFloat = 37
+    
     // FriendsList Related
     // 無好友情境 UI
     private let emptyView = EmptyStateView()
@@ -117,7 +120,7 @@ private extension FriendsListViewController {
         }
     }
     
-    // MARK: - TableView For State With Friends
+    // MARK: - Setup TableView
     func setupTableView() {
         tableView.backgroundColor = .white
         tableView.clipsToBounds = false
@@ -144,6 +147,14 @@ private extension FriendsListViewController {
         searchHeaderView.onTextChanged = { [weak self] text in
             self?.searchKeyword = text
             self?.applySearchFilter()
+        }
+        
+        // 點擊搜尋上移及復原
+        searchHeaderView.onBeginEditing = { [weak self] in
+            self?.setSearchPinned(true, animated: true)
+        }
+        searchHeaderView.onEndEditing = { [weak self] in
+            self?.setSearchPinned(false, animated: true)
         }
     }
     
@@ -242,6 +253,33 @@ private extension FriendsListViewController {
         view.endEditing(true)
     }
     
+    func setSearchPinned(_ pinned: Bool, animated: Bool) {
+        let apply = {
+            (self.parent as? FriendsContainerViewController)?
+                .setHeaderCollapsed(pinned, animated: false)
+            
+            if pinned {
+                self.invitationsHeightConstraint?.constant = 0
+                self.segmentHeightConstraint?.constant = 0
+                let y = -self.tableView.adjustedContentInset.top
+                self.tableView.setContentOffset(CGPoint(x: 0, y: y), animated: false)
+            } else {
+                self.segmentHeightConstraint?.constant = self.defaultSegmentHeight
+                let shouldShowInvites = !self.receivedInvitations.isEmpty
+                self.invitationsHeightConstraint?.constant = shouldShowInvites ? self.lastInvitationsHeight : 0
+            }
+            
+            self.view.layoutIfNeeded()
+            self.parent?.view.layoutIfNeeded()
+        }
+        
+        if animated {
+            UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseInOut]) { apply() }
+        } else {
+            apply()
+        }
+    }
+
     // MARK: - Setup PlaceHolder
     func configureInvitationsCollectionView() {
         invitationsContainerView.backgroundColor = .clear
@@ -262,6 +300,7 @@ private extension FriendsListViewController {
         
         invitationCollectionView.onPreferredHeightChanged = { [weak self] height, animated in
             guard let self else { return }
+            self.lastInvitationsHeight = height
             self.invitationsHeightConstraint?.constant = height
             
             if animated {

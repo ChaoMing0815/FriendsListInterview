@@ -18,6 +18,8 @@ final class FriendsSearchHeaderView: UIView {
 
     // MARK: - Callback
     var onTextChanged: ((String) -> Void)?
+    var onBeginEditing: (() -> Void)?
+    var onEndEditing: (() -> Void)?
 
     // MARK: - Init
     override init(frame: CGRect) {
@@ -87,11 +89,15 @@ private extension FriendsSearchHeaderView {
 
     func setupActions() {
         textField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
+        textField.addTarget(self, action: #selector(didBeginEditing), for: .editingDidBegin)
+        textField.addTarget(self, action: #selector(didEndEditing), for: .editingDidEnd)
     }
 
     @objc func textDidChange() {
         onTextChanged?(textField.text ?? "")
     }
+    @objc private func didBeginEditing() { onBeginEditing?() }
+    @objc private func didEndEditing() { onEndEditing?() }
 }
 
 // MARK: - Private Helpers

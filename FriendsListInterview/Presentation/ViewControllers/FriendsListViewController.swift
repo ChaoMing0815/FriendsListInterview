@@ -17,6 +17,7 @@ final class FriendsListViewController: UIViewController {
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     private let contentStackView = UIStackView()
     private let invitationsContainerView = UIView()
+    private let invitationCollectionView = InvitationCollectionView()
     private let segmentContainerView = UIView()
     
     private var invitationsHeightConstraint: NSLayoutConstraint?
@@ -191,6 +192,11 @@ private extension FriendsListViewController {
             emptyView.isHidden = true
             
             self.receivedInvitations = receivedInvitations
+            invitationCollectionView.update(invitations: receivedInvitations)
+
+            let shouldShowInvitations = !receivedInvitations.isEmpty
+            invitationsHeightConstraint?.constant = shouldShowInvitations ? 86 : 0
+            
             self.allFriends = friends
             applySearchFilter()
         }
@@ -236,23 +242,27 @@ private extension FriendsListViewController {
     func configureInvitationsPlaceholder() {
         invitationsContainerView.backgroundColor = .clear
 
-        let label = UILabel()
-        label.text = "Invitations Placeholder"
-        label.font = .systemFont(ofSize: 12)
-        label.textColor = .secondaryLabel
-
-        invitationsContainerView.addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
+        invitationsContainerView.addSubview(invitationCollectionView)
+        invitationCollectionView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: invitationsContainerView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: invitationsContainerView.centerYAnchor)
+            invitationCollectionView.topAnchor.constraint(equalTo: invitationsContainerView.topAnchor),
+            invitationCollectionView.leadingAnchor.constraint(equalTo: invitationsContainerView.leadingAnchor),
+            invitationCollectionView.trailingAnchor.constraint(equalTo: invitationsContainerView.trailingAnchor),
+            invitationCollectionView.bottomAnchor.constraint(equalTo: invitationsContainerView.bottomAnchor)
         ])
 
         if invitationsHeightConstraint == nil {
             invitationsHeightConstraint = invitationsContainerView.heightAnchor.constraint(equalToConstant: 0)
             invitationsHeightConstraint?.isActive = true
         }
-        // 先給 0：等你之後接上 invitations collection 再改高度
+        
+        invitationCollectionView.onAcceptTapped = { [weak self] _ in
+            self?.presentPlaceholderAlert()
+        }
+        
+        invitationCollectionView.onDeclineTapped = { [weak self] _ in
+            self?.presentPlaceholderAlert()
+        }
     }
 
     func configureSegmentPlaceholder() {

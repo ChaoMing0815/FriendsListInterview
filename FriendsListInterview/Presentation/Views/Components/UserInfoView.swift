@@ -34,10 +34,7 @@ final class UserInfoView: UIView {
     /// Layout-only view, data is injected by caller (ViewController / HeaderView).
     func configure(name: String, kokoID: String) {
         nameLabel.text = name
-        subtitleLabel.text = "設定 KOKO ID"
-        // 題目資料有 kokoid，但設計圖 subtitle 是固定文案；
-        // 若你之後要顯示 kokoID，可改成：subtitleLabel.text = "KOKO ID: \(kokoID)"
-        _ = kokoID
+        subtitleLabel.text = "KOKO ID : \(kokoID)"
     }
 }
 
@@ -61,6 +58,18 @@ private extension UserInfoView {
     }
 
     func setupConstraints() {
+        textContainerView.translatesAutoresizingMaskIntoConstraints = false
+        let preferredTrailing = textContainerView.trailingAnchor
+            .constraint(equalTo: avatarImageView.leadingAnchor, constant: -12)
+        preferredTrailing.priority = .defaultHigh
+        preferredTrailing.isActive = true
+        
+        // 上限：絕對不能超過 avatar（防止重疊）
+        let maxTrailing = textContainerView.trailingAnchor
+            .constraint(lessThanOrEqualTo: avatarImageView.leadingAnchor, constant: -12)
+        maxTrailing.priority = .required
+        maxTrailing.isActive = true
+        
         NSLayoutConstraint.activate([
             // Text container (left aligned area)
             textContainerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 30),
@@ -97,9 +106,11 @@ private extension UserInfoView {
     func configureNameLabel() {
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         nameLabel.font = .systemFont(ofSize: 17, weight: .semibold)
-        nameLabel.textColor = .label
+        nameLabel.textColor = .systemGray
         nameLabel.numberOfLines = 1
         nameLabel.setContentHuggingPriority(.required, for: .vertical)
+        nameLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+
     }
 
     func configureSubtitleLabel() {
@@ -108,13 +119,17 @@ private extension UserInfoView {
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.numberOfLines = 1
         subtitleLabel.setContentHuggingPriority(.required, for: .vertical)
+        subtitleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        subtitleLabel.lineBreakMode = .byTruncatingTail
+        subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
     }
 
     func configureChevronButton() {
         chevronButton.translatesAutoresizingMaskIntoConstraints = false
-
-        // 用 system chevron 先當 placeholder（之後要換成 Zeplin asset 再改）
-        chevronButton.setImage(UIImage(named: "icInfoBackDeepGray"), for: .normal)
+        chevronButton.setContentHuggingPriority(.required, for: .horizontal)
+        chevronButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        let image = UIImage(named: "icInfoBackDeepGray")?.withRenderingMode(.alwaysOriginal)
+        chevronButton.setImage(image, for: .normal)
         chevronButton.tintColor = .secondaryLabel
 
         // 不做互動（但保留 UIButton 身份）
@@ -128,7 +143,7 @@ private extension UserInfoView {
         avatarImageView.layer.cornerRadius = 26
 
         // Placeholder avatar（之後可換 assets）
-        avatarImageView.image = UIImage(systemName: "person.crop.circle.fill")
+        avatarImageView.image = UIImage(systemName: "person.crop.circle.fill")?.withRenderingMode(.alwaysTemplate)
         avatarImageView.tintColor = .tertiaryLabel
     }
 
@@ -138,6 +153,8 @@ private extension UserInfoView {
         subtitleRowStackView.alignment = .center
         subtitleRowStackView.distribution = .fill
         subtitleRowStackView.spacing = 4 // 「緊貼」的感覺：label 和 > 間距先小一點，之後可再微調
+        subtitleRowStackView.setContentHuggingPriority(.required, for: .horizontal)
+        subtitleRowStackView.setContentCompressionResistancePriority(.required, for: .horizontal)
         subtitleRowStackView.addArrangedSubview(subtitleLabel)
         subtitleRowStackView.addArrangedSubview(chevronButton)
     }

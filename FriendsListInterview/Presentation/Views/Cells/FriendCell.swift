@@ -47,7 +47,10 @@ final class FriendCell: UITableViewCell {
     
     private let transferButton: UIButton = {
         var config = UIButton.Configuration.bordered()
-        config.title = "轉帳"
+        var title = AttributedString("轉帳")
+        title.font = .systemFont(ofSize: 14, weight: .semibold)
+        config.attributedTitle = title
+        
         config.baseForegroundColor = .systemPink
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
         
@@ -57,24 +60,25 @@ final class FriendCell: UITableViewCell {
         config.background.backgroundColor = .clear
         
         let button = UIButton(configuration: config)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     private let pendingButton: UIButton = {
         var config = UIButton.Configuration.bordered()
-        config.title = "邀請中"
-        config.baseForegroundColor = .systemGray3
+        var title = AttributedString("邀請中")
+        title.font = .systemFont(ofSize: 14, weight: .semibold)
+        config.attributedTitle = title
+        
+        config.baseForegroundColor = .systemGray
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
         
-        config.background.strokeColor = .systemGray3
+        config.background.strokeColor = .systemGray
         config.background.strokeWidth = 1
         config.background.cornerRadius = 2
         config.background.backgroundColor = .clear
         
         let button = UIButton(configuration: config)
-        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -107,9 +111,9 @@ final class FriendCell: UITableViewCell {
         avatarImageView.image = nil
         nameLabel.text = nil
         topStarView.alpha = 0
-        transferButton.alpha = 1
-        pendingButton.alpha = 0
-        moreButton.alpha = 1
+        transferButton.isHidden = false
+        pendingButton.isHidden = true
+        moreButton.isHidden = false
         onTransferTapped = nil
         onMoreTapped = nil
         
@@ -133,9 +137,9 @@ final class FriendCell: UITableViewCell {
             transferTrailingToContentConstraint.isActive = true
             transferTrailingToPendingConstraint.isActive = false
             
-            transferButton.alpha = 1
-            pendingButton.alpha = 0
-            moreButton.alpha = 1
+            transferButton.isHidden = false
+            pendingButton.isHidden = true
+            moreButton.isHidden = false
             
             transferButton.isUserInteractionEnabled = true
             moreButton.isUserInteractionEnabled = true
@@ -145,9 +149,9 @@ final class FriendCell: UITableViewCell {
             transferTrailingToContentConstraint.isActive = false
             transferTrailingToPendingConstraint.isActive = true
             
-            transferButton.alpha = 1
-            pendingButton.alpha = 1
-            moreButton.alpha = 0
+            transferButton.isHidden = false
+            pendingButton.isHidden = false
+            moreButton.isHidden = true
             
             transferButton.isUserInteractionEnabled = true
             pendingButton.isUserInteractionEnabled = false
@@ -157,9 +161,9 @@ final class FriendCell: UITableViewCell {
             transferTrailingToContentConstraint.isActive = true
             transferTrailingToPendingConstraint.isActive = false
             
-            transferButton.alpha = 0
-            pendingButton.alpha = 0
-            moreButton.alpha = 0
+            transferButton.isHidden = true
+            pendingButton.isHidden = true
+            moreButton.isHidden = true
             
             transferButton.isUserInteractionEnabled = false
             pendingButton.isUserInteractionEnabled = false
@@ -185,7 +189,8 @@ private extension FriendCell {
         leftStack.setCustomSpacing(15, after: avatarImageView)
         
         transferTrailingToContentConstraint = transferButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -53)
-        transferTrailingToPendingConstraint = transferButton.trailingAnchor.constraint(equalTo: pendingButton.layoutMarginsGuide.leadingAnchor, constant: -10)
+        transferTrailingToPendingConstraint =
+            transferButton.trailingAnchor.constraint(equalTo: pendingButton.leadingAnchor, constant: -10)
         
         NSLayoutConstraint.activate([
             leftStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 10),
@@ -204,7 +209,7 @@ private extension FriendCell {
             moreButton.widthAnchor.constraint(equalToConstant: 18),
             moreButton.heightAnchor.constraint(equalToConstant: 18),
             
-            pendingButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            pendingButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -10),
             pendingButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             pendingButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 60),
             pendingButton.heightAnchor.constraint(equalToConstant: 24),

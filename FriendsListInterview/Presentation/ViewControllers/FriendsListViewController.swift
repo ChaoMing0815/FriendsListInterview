@@ -13,6 +13,7 @@ final class FriendsListViewController: UIViewController {
     
     private let viewModel: FriendsListViewModel
     
+    // MARK: - UI Components
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     
     // 無好友情境 UI
@@ -21,8 +22,13 @@ final class FriendsListViewController: UIViewController {
     // 有好友情境 UI
     private let tableView = UITableView(frame: .zero, style: .plain)
     private var receivedInvitations: [Friend] = []
-    private var friends: [Friend] = []
     private var hasInvitations: Bool { !receivedInvitations.isEmpty }
+    
+    // 搜尋功能
+    private let searchHeaderView = FriendsSearchHeaderView()
+    private var allFriends: [Friend] = []
+    private var filteredFriends: [Friend] = []
+    private var searchKeyword: String = ""
     
     init(viewModel: FriendsListViewModel) {
         self.viewModel = viewModel
@@ -40,9 +46,15 @@ final class FriendsListViewController: UIViewController {
         setupEmptyView()
         setupTableView()
         setupLoadingIndicator()
+        setupDismissKeyboardGesture()
         bindViewModel()
         
         Task { await viewModel.loadFriends() }
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateTableHeaderLayout()
     }
 }
 
@@ -101,6 +113,15 @@ private extension FriendsListViewController {
         
         /// 初始狀態不顯示
         tableView.isHidden = true
+        
+        // Add SearchTextField
+        tableView.tableHeaderView = searchHeaderView
+        tableView.keyboardDismissMode = .onDrag
+        updateTableHeaderLayout()
+        searchHeaderView.onTextChanged = { [weak self] text in
+            self?.searchKeyword = text
+            self?.applySearchFilter()
+        }
     }
     
     // MARK: - TableView Section Type
@@ -123,6 +144,7 @@ private extension FriendsListViewController {
         ])
     }
     
+    // MARK: - ViewModel Binding
     func bindViewModel() {
         viewModel.onStateChanged = { [weak self] state in
             self?.apply(state: state)
@@ -148,8 +170,8 @@ private extension FriendsListViewController {
             tableView.isHidden = false
             
             self.receivedInvitations = receivedInvitations
-            self.friends = friends
-            tableView.reloadData()
+            self.allFriends = friends
+            applySearchFilter()
         }
     }
     
@@ -157,6 +179,36 @@ private extension FriendsListViewController {
         let alert = UIAlertController(title: "提示", message: "功能尚未實作", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
+    }
+    
+    func updateTableHeaderLayout() {
+        let width = view.bounds.width
+        searchHeaderView.frame = CGRect(x: 0, y: 0, width: width, height: 56)
+        tableView.tableHeaderView = searchHeaderView
+    }
+    
+    // MARK: - Search Related Functions
+    func applySearchFilter() {
+        let keyword = searchKeyword.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if keyword.isEmpty {
+            filteredFriends = allFriends
+        } else {
+            filteredFriends = allFriends.filter { friend in
+                friend.name.localizedCaseInsensitiveContains(keyword)
+            }
+        }
+        tableView.reloadData()
+    }
+    
+    private func setupDismissKeyboardGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false // 重要：不影響 cell 點擊
+        view.addGestureRecognizer(tap)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
     }
 }
 
@@ -168,9 +220,9 @@ extension FriendsListViewController: UITableViewDelegate, UITableViewDataSource 
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if hasInvitations {
-            return section == 0 ?  receivedInvitations.count : friends.count
+            return section == 0 ?  receivedInvitations.count : filteredFriends.count
         } else {
-            return friends.count
+            return filteredFriends.count
         }
     }
     
@@ -189,7 +241,7 @@ extension FriendsListViewController: UITableViewDelegate, UITableViewDataSource 
             return cell
         case .friends:
             let cell = tableView.dequeueReusableCell(withIdentifier: FriendCell.reuseIdentifier, for: indexPath) as! FriendCell
-            let friend = friends[indexPath.row]
+            let friend = filteredFriends[indexPath.row]
             cell.configure(name: friend.name, status: friend.status, isTop: friend.isTop)
             cell.onTransferTapped = { [weak self] in
                 self?.presentPlaceholderAlert()

@@ -29,7 +29,6 @@ final class FriendsContainerViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupLayout()
         embed(contentViewController, in: containerView)
-        
     }
 }
 
@@ -68,3 +67,4 @@ private extension FriendsContainerViewController {
         viewController.didMove(toParent: self)
     }
 }
+

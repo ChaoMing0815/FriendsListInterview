@@ -116,6 +116,7 @@ private extension FriendsSearchHeaderView {
         textField.returnKeyType = .search
         textField.autocorrectionType = .no
         textField.spellCheckingType = .no
+        textField.delegate = self
 
         let placeholder = "想轉一筆給誰呢？"
         let attrs: [NSAttributedString.Key: Any] = [
@@ -135,5 +136,13 @@ private extension FriendsSearchHeaderView {
 
         // 目前先不做互動（但維持 button 語意）
         addFriendButton.isUserInteractionEnabled = false
+    }
+}
+
+// MARK: - UITextFieldDelegate
+extension FriendsSearchHeaderView: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder() // ✅ 收鍵盤
+        return true
     }
 }

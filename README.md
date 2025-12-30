@@ -1,5 +1,10 @@
 # FriendsListInterview
 
+[中文說明](#中文說明) ｜ [English Version](#english)
+
+---
+## 中文說明
+
 一個 iOS 面試作業專案，示範 **UIKit + MVVM 架構設計**、清楚的分層責任，以及以狀態驅動 UI 呈現的好友列表功能。
 
 本專案的重點不在功能完整度，而在於 **架構清晰度、可維護性與可測試性**。
@@ -62,7 +67,74 @@ HLD UML 圖說明了以下設計原則：
 > 內部 UI 狀態（例如 empty / content）屬於 ViewModel 的狀態管理，不視為架構實體，因此未納入 HLD 圖中，以保持架構圖的清晰與抽象層級一致。
 
 ---
+## Demo 畫面展示
 
+以下為本專案在不同情境（Scenario）下的實際執行畫面，用於說明  
+**狀態驅動 UI（State-driven UI）** 在各種資料狀況下的呈現結果。
+
+---
+
+### Scenario Selector（情境切換入口）
+
+此頁面僅作為 **Demo 與面試展示用途**，方便快速切換不同好友情境，
+實際產品中不會存在此畫面。
+
+<img src="docs/images/ScenarioSelectorPage.png" width="320" />
+
+---
+
+### 好友列表（僅好友）
+
+顯示一般好友列表，支援：
+
+- 好友基本資訊顯示
+- 釘選好友（Top Friend）
+- 搜尋功能
+
+<img src="docs/images/Scenario_FriendsOnly_WithMergeFriendsList.png" width="320" />
+
+---
+
+### 好友搜尋（搜尋列置頂）
+
+點擊搜尋列後，畫面會自動上推並：
+
+- 收合 Header
+- 隱藏邀請區塊
+- 將搜尋列固定於頂部
+
+結束搜尋後可還原原始版面。
+
+<img src="docs/images/Scenario_FriendsOnly_SearchPinToTop.png" width="320" />
+
+---
+
+### 好友列表＋邀請卡（展開 / 收合）
+
+當存在好友邀請時，列表上方會顯示可展開 / 收合的邀請卡區塊：
+
+- 使用 CollectionView 實作
+- 高度隨內容動態變化
+- 透過 Constraint 動畫平滑展開 / 收合
+
+<img src="docs/images/Scenario_FriendsWithInvitations_InvitationExpend.png" width="320" />
+
+---
+
+### 無好友（Empty State）
+
+當無任何好友資料時：
+
+- 顯示 Empty State 畫面
+- 使用 `tableView.backgroundView` 實作
+- 不顯示搜尋列與列表分隔線
+
+<img src="docs/images/Scenarios_Empty.png" width="320" />
+
+
+
+
+---
 ## Presentation Layer（表現層）
 
 ### View Controllers
@@ -206,9 +278,10 @@ Coverage 可於 **Xcode → Test Navigator → Coverage** 查看。
 **Chao Ming Huang**  
 iOS Engineer（UIKit / Swift）
 
+
 ---
 
-# FriendsListInterview
+## English
 
 An iOS interview assignment that demonstrates **UIKit-based MVVM architecture**, clean layering, and state-driven UI rendering for a friends list feature.
 
@@ -269,6 +342,42 @@ The architecture is illustrated in the HLD UML diagram:
 - Concrete implementations realize protocols via dependency injection
 
 > Internal UI states (such as empty or content scenarios) are intentionally omitted from the HLD diagram, as they are internal ViewModel state representations rather than architectural components.
+
+---
+## Demo
+
+This section demonstrates the main user flows and UI behaviors under different scenarios.
+
+### Scenario Selector
+
+The app provides a scenario selector to simulate different data states during development and testing.
+
+<img src="docs/images/ScenarioSelectorPage.png" width="320" />
+
+### Friends List (Without Invitations)
+
+Displays a merged friends list with search support.
+
+<img src="docs/images/Scenario_FriendsOnly_WithMergeFriendsList.png" width="320" />
+
+#### Search Interaction
+
+The search bar pins to the top while editing to enhance focus and usability.
+
+<img src="docs/images/Scenario_FriendsOnly_SearchPinToTop.png" width="320" />
+
+### Friends List (With Invitations)
+
+Friend invitations are displayed as expandable cards above the list.
+
+<img src="docs/images/Scenario_FriendsWithInvitations_InvitationExpend.png" width="320" />
+
+### Empty State
+
+An empty state is shown when there are no friends, guiding users to start adding friends.
+
+<img src="docs/images/Scenarios_Empty.png" width="320" />
+
 
 ---
 

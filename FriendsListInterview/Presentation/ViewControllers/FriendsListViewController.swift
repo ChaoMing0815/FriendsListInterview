@@ -15,7 +15,14 @@ final class FriendsListViewController: UIViewController {
     
     // MARK: - UI Components
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
+    private let contentStackView = UIStackView()
+    private let invitationsContainerView = UIView()
+    private let segmentContainerView = UIView()
     
+    private var invitationsHeightConstraint: NSLayoutConstraint?
+    private var segmentHeightConstraint: NSLayoutConstraint?
+    
+    // FriendsList Related
     // 無好友情境 UI
     private let emptyView = EmptyStateView()
     
@@ -41,10 +48,11 @@ final class FriendsListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .white
         
         setupEmptyView()
         setupTableView()
+        setupContentStackView()
         setupLoadingIndicator()
         setupDismissKeyboardGesture()
         bindViewModel()
@@ -60,6 +68,33 @@ final class FriendsListViewController: UIViewController {
 
 // MARK: - Helpers
 private extension FriendsListViewController {
+    // MARK: - Setup StackView
+    func setupContentStackView() {
+        view.addSubview(contentStackView)
+
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            contentStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            contentStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            contentStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            contentStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+
+        contentStackView.axis = .vertical
+        contentStackView.alignment = .fill
+        contentStackView.distribution = .fill
+        contentStackView.spacing = 0
+
+        configureInvitationsPlaceholder()
+        configureSegmentPlaceholder()
+
+        contentStackView.addArrangedSubview(invitationsContainerView)
+        contentStackView.addArrangedSubview(segmentContainerView)
+        contentStackView.addArrangedSubview(tableView)
+        
+        contentStackView.isHidden = true
+    }
+    
     // MARK: - View For Empty State
     func setupEmptyView() {
         view.addSubview(emptyView)
@@ -82,17 +117,7 @@ private extension FriendsListViewController {
     
     // MARK: - TableView For State With Friends
     func setupTableView() {
-        view.addSubview(tableView)
-        
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-            ])
-        
-        tableView.backgroundColor = .systemGroupedBackground
+        tableView.backgroundColor = .white
         tableView.clipsToBounds = false
         
         tableView.separatorStyle = .singleLine
@@ -108,11 +133,7 @@ private extension FriendsListViewController {
         tableView.delegate = self
         
         // Cell Registration
-        tableView.register(InvitationCell.self, forCellReuseIdentifier: InvitationCell.reuseIdentifier)
         tableView.register(FriendCell.self, forCellReuseIdentifier: FriendCell.reuseIdentifier)
-        
-        /// 初始狀態不顯示
-        tableView.isHidden = true
         
         // Add SearchTextField
         tableView.tableHeaderView = searchHeaderView
@@ -156,18 +177,18 @@ private extension FriendsListViewController {
         switch state {
         case .loading:
             loadingIndicator.startAnimating()
+            contentStackView.isHidden = true
             emptyView.isHidden = true
-            tableView.isHidden = true
          
         case .empty:
             loadingIndicator.stopAnimating()
+            contentStackView.isHidden = true
             emptyView.isHidden = false
-            tableView.isHidden = true
             
         case let .content(receivedInvitations, friends):
             loadingIndicator.stopAnimating()
+            contentStackView.isHidden = false
             emptyView.isHidden = true
-            tableView.isHidden = false
             
             self.receivedInvitations = receivedInvitations
             self.allFriends = friends
@@ -210,61 +231,68 @@ private extension FriendsListViewController {
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }
+    
+    // MARK: - Setup PlaceHolder
+    func configureInvitationsPlaceholder() {
+        invitationsContainerView.backgroundColor = .clear
+
+        let label = UILabel()
+        label.text = "Invitations Placeholder"
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+
+        invitationsContainerView.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: invitationsContainerView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: invitationsContainerView.centerYAnchor)
+        ])
+
+        if invitationsHeightConstraint == nil {
+            invitationsHeightConstraint = invitationsContainerView.heightAnchor.constraint(equalToConstant: 0)
+            invitationsHeightConstraint?.isActive = true
+        }
+        // 先給 0：等你之後接上 invitations collection 再改高度
+    }
+
+    func configureSegmentPlaceholder() {
+        segmentContainerView.backgroundColor = .clear
+
+        let label = UILabel()
+        label.text = "Segment Placeholder"
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .secondaryLabel
+
+        segmentContainerView.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: segmentContainerView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: segmentContainerView.centerYAnchor)
+        ])
+
+        if segmentHeightConstraint == nil {
+            segmentHeightConstraint = segmentContainerView.heightAnchor.constraint(equalToConstant: 37)
+            segmentHeightConstraint?.isActive = true
+        }
+    }
 }
 
 // MARK: - UITableViewDelegate and UITableViewDataSource
 extension FriendsListViewController: UITableViewDelegate, UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
-        return hasInvitations ? 2 : 1
+        return 1
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if hasInvitations {
-            return section == 0 ?  receivedInvitations.count : filteredFriends.count
-        } else {
-            return filteredFriends.count
-        }
+        return filteredFriends.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch sectionType(for: indexPath.section) {
-        case .invitations:
-            let cell = tableView.dequeueReusableCell(withIdentifier: InvitationCell.reuseIdentifier, for: indexPath) as! InvitationCell
-            let friend = receivedInvitations[indexPath.row]
-            cell.configure(name: friend.name)
-            cell.onAcceptTapped = { [weak self] in
-                self?.presentPlaceholderAlert()
-            }
-            cell.onDeclineTapped = { [weak self] in
-                self?.presentPlaceholderAlert()
-            }
-            return cell
-        case .friends:
-            let cell = tableView.dequeueReusableCell(withIdentifier: FriendCell.reuseIdentifier, for: indexPath) as! FriendCell
-            let friend = filteredFriends[indexPath.row]
-            cell.configure(name: friend.name, status: friend.status, isTop: friend.isTop)
-            cell.onTransferTapped = { [weak self] in
-                self?.presentPlaceholderAlert()
-            }
-            cell.onMoreTapped = { [weak self] in
-                self?.presentPlaceholderAlert()
-            }
-            return cell
-        }
+        let cell = tableView.dequeueReusableCell(withIdentifier: FriendCell.reuseIdentifier, for: indexPath) as! FriendCell
+        let friend = filteredFriends[indexPath.row]
+        cell.configure(name: friend.name, status: friend.status, isTop: friend.isTop)
+        cell.onTransferTapped = { [weak self] in self?.presentPlaceholderAlert() }
+        cell.onMoreTapped = { [weak self] in self?.presentPlaceholderAlert() }
+        return cell
     }
-    
-    // MARK: - HeaderView For TableView
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch sectionType(for: section) {
-        case .invitations:
-            return "邀請"
-        case .friends:
-            return "好友"
-        }
-    }
-    
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 36
-    }
-
 }

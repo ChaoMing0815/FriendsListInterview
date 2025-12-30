@@ -105,7 +105,7 @@ private extension FriendsSearchHeaderView {
     func configureSearchBackgroundView() {
         searchBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         searchBackgroundView.backgroundColor = UIColor(white: 0.92, alpha: 1)
-        searchBackgroundView.layer.cornerRadius = 18
+        searchBackgroundView.layer.cornerRadius = 10
         searchBackgroundView.clipsToBounds = true
     }
 

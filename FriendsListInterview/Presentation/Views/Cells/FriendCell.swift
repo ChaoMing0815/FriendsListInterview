@@ -40,7 +40,7 @@ final class FriendCell: UITableViewCell {
         label.font = .systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.lineBreakMode = .byTruncatingTail
         return label
     }()
@@ -217,9 +217,14 @@ private extension FriendCell {
             transferButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             transferButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 47),
             transferButton.heightAnchor.constraint(equalToConstant: 24),
-            
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: transferButton.leadingAnchor, constant: -8)
         ])
+        
+        let nameTrailing = nameLabel.trailingAnchor.constraint(
+            lessThanOrEqualTo: transferButton.leadingAnchor,
+            constant: -8
+        )
+        nameTrailing.priority = .defaultHigh
+        nameTrailing.isActive = true
     }
     
     // Set Button Actions

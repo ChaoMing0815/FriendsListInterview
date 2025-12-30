@@ -13,7 +13,7 @@ final class EmptyStateView: UIView {
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(systemName: "person.fill")
+        imageView.image = UIImage(named: "imgFriendsEmpty")
         imageView.tintColor = .systemGray3
         return imageView
     }()

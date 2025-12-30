@@ -125,6 +125,7 @@ final class FriendCell: UITableViewCell {
     func configure(name: String, status: FriendStatus, isTop: Bool, avatar: UIImage? = nil) {
         nameLabel.text = name
         avatarImageView.image = avatar ?? UIImage(systemName: "person.crop.circle.fill")
+        avatarImageView.tintColor = .systemGray3
         topStarView.alpha = isTop ? 1 : 0
         
         switch status {

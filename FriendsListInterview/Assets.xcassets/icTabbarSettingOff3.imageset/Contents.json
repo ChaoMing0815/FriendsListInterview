@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "icTabbarProductsOff.png",
+      "filename" : "icTabbarSettingOff3.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icTabbarProductsOff@2x.png",
+      "filename" : "icTabbarSettingOff3@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "icTabbarProductsOff@3x.png",
+      "filename" : "icTabbarSettingOff3@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

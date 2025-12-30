@@ -14,9 +14,11 @@ final class FriendsContainerViewController: UIViewController {
     private let headerView = FriendsHeaderView()
     private let containerView = UIView()
     private let contentViewController: UIViewController
+    private let bottomTabBarView = BottomTabBarView()
     
     private var headerHeightConstraint: NSLayoutConstraint!
     private var defaultHeaderHeight: CGFloat = 0
+    private var bottomTabBarHeightConstraint: NSLayoutConstraint!
     
     init(contentViewController: UIViewController) {
         self.contentViewController = contentViewController
@@ -81,22 +83,31 @@ private extension FriendsContainerViewController {
     func setupLayout() {
         view.addSubview(headerView)
         view.addSubview(containerView)
+        view.addSubview(bottomTabBarView)
         
         headerView.translatesAutoresizingMaskIntoConstraints = false
         containerView.translatesAutoresizingMaskIntoConstraints = false
+        bottomTabBarView.translatesAutoresizingMaskIntoConstraints = false
         
         headerHeightConstraint = headerView.heightAnchor.constraint(equalToConstant: 160)
         headerHeightConstraint.isActive = true
+        
+        bottomTabBarHeightConstraint = bottomTabBarView.heightAnchor.constraint(equalToConstant: 83) // 依 Zeplin（常見 83 含 safe area）
+        bottomTabBarHeightConstraint.isActive = true
         
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
+            bottomTabBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomTabBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomTabBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
             containerView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            containerView.bottomAnchor.constraint(equalTo: bottomTabBarView.topAnchor)
         ])
     }
     

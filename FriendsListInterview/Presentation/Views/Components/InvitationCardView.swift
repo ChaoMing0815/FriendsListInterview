@@ -110,6 +110,7 @@ final class InvitationCardView: UIView {
     func configure(name: String, avatar: UIImage? = nil) {
         nameLabel.text = name
         avatarView.image = avatar ?? UIImage(systemName: "person.crop.circle.fill")
+        avatarView.tintColor = .systemGray3
     }
 
     // MARK: - Reset

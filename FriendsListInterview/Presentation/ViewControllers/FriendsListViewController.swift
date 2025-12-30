@@ -54,8 +54,7 @@ final class FriendsListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
-        setupEmptyView()
+
         setupTableView()
         setupContentStackView()
         setupLoadingIndicator()
@@ -67,7 +66,7 @@ final class FriendsListViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        updateTableHeaderLayout()
+        updateTableHeaderLayoutIfNeeded()
     }
 }
 
@@ -100,33 +99,13 @@ private extension FriendsListViewController {
         contentStackView.isHidden = true
     }
     
-    // MARK: - View For Empty State
-    func setupEmptyView() {
-        view.addSubview(emptyView)
-        emptyView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            emptyView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            emptyView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            emptyView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            emptyView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-        
-        /// 初始狀態不顯示
-        emptyView.isHidden = true
-        
-        emptyView.onAddFriendTapped = { [weak self] in
-            // TODO: - 加好友功能
-            self?.presentPlaceholderAlert()
-        }
-    }
-    
     // MARK: - Setup TableView
     func setupTableView() {
         tableView.backgroundColor = .white
         tableView.clipsToBounds = false
         
         tableView.separatorStyle = .singleLine
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 105, bottom: 0, right: 20)
         tableView.layoutMargins = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         
         tableView.sectionHeaderTopPadding = 0
@@ -143,7 +122,7 @@ private extension FriendsListViewController {
         // Add SearchTextField
         tableView.tableHeaderView = searchHeaderView
         tableView.keyboardDismissMode = .onDrag
-        updateTableHeaderLayout()
+        updateTableHeaderLayoutIfNeeded()
         searchHeaderView.onTextChanged = { [weak self] text in
             self?.searchKeyword = text
             self?.applySearchFilter()
@@ -156,17 +135,6 @@ private extension FriendsListViewController {
         searchHeaderView.onEndEditing = { [weak self] in
             self?.setSearchPinned(false, animated: true)
         }
-    }
-    
-    // MARK: - TableView Section Type
-    func sectionType(for section: Int) -> SectionType {
-        if hasInvitations { return section == 0 ? .invitations : .friends }
-        return .friends
-    }
-    
-    enum SectionType {
-        case invitations
-        case friends
     }
     
     func setupLoadingIndicator() {
@@ -186,22 +154,38 @@ private extension FriendsListViewController {
         apply(state: viewModel.state)
     }
     
+    // MARK: - Apply State By Scenario
     func apply(state: FriendsListState) {
         switch state {
         case .loading:
             loadingIndicator.startAnimating()
             contentStackView.isHidden = true
-            emptyView.isHidden = true
          
         case .empty:
             loadingIndicator.stopAnimating()
-            contentStackView.isHidden = true
-            emptyView.isHidden = false
+            contentStackView.isHidden = false
+            searchKeyword = ""
+            
+            receivedInvitations = []
+            allFriends = []
+            filteredFriends = []
+            
+            invitationsHeightConstraint?.constant = 0
+            segmentHeightConstraint?.constant = defaultSegmentHeight
+            
+            showEmptyBackground()
+            tableView.reloadData()
             
         case let .content(receivedInvitations, friends):
             loadingIndicator.stopAnimating()
             contentStackView.isHidden = false
-            emptyView.isHidden = true
+
+            tableView.backgroundView = nil
+            if tableView.tableHeaderView == nil {
+                tableView.tableHeaderView = searchHeaderView
+                updateTableHeaderLayoutIfNeeded()
+            }
+            tableView.separatorStyle = .singleLine
 
             self.allFriends = friends
             applySearchFilter()
@@ -223,10 +207,21 @@ private extension FriendsListViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func updateTableHeaderLayout() {
+    func updateTableHeaderLayoutIfNeeded() {
+        guard tableView.tableHeaderView === searchHeaderView else { return } // .empty 不需要
         let width = view.bounds.width
         searchHeaderView.frame = CGRect(x: 0, y: 0, width: width, height: 56)
         tableView.tableHeaderView = searchHeaderView
+    }
+    
+    // MARK: - Setup EmptyView
+    func showEmptyBackground() {
+        emptyView.isHidden = false
+        emptyView.frame = tableView.bounds
+        emptyView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        tableView.backgroundView = emptyView
+        tableView.tableHeaderView = nil
+        tableView.separatorStyle = .none
     }
     
     // MARK: - Search Related Functions

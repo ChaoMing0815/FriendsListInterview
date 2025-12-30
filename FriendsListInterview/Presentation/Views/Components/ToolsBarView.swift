@@ -9,8 +9,12 @@ import Foundation
 import UIKit
 
 final class ToolsBarView: UIView {
+    // MARK: - Callbacks
+    // 滿足設計圖 UI 需求，ToolsBar 取代預設 NavigationBar ，自訂返回按鈕
+    var onBackTapped: (() -> Void)?
     
     // MARK: - UI Components
+    private let backButton = UIButton(type: .custom)
     private let atmButton = UIButton(type: .custom)
     private let transferButton = UIButton(type: .custom)
     private let scanButton = UIButton(type: .custom)
@@ -32,19 +36,28 @@ private extension ToolsBarView {
     func setupViews() {
         backgroundColor = .clear
         
+        configureSystemBackButton()
         configureIconButton(atmButton, assetName: "icNavPinkWithdraw")
         configureIconButton(transferButton, assetName: "icNavPinkTransfer")
         configureIconButton(scanButton, assetName: "icNavPinkScan")
         
+        addSubview(backButton)
         addSubview(atmButton)
         addSubview(transferButton)
         addSubview(scanButton)
+        
+        backButton.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
     }
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
+            backButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
+            backButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            backButton.widthAnchor.constraint(equalToConstant: 18),
+            backButton.heightAnchor.constraint(equalToConstant: 18),
+            
             // icATM: leading 20, size 24x24
-            atmButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            atmButton.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 5),
             atmButton.centerYAnchor.constraint(equalTo: centerYAnchor),
             atmButton.widthAnchor.constraint(equalToConstant: 24),
             atmButton.heightAnchor.constraint(equalToConstant: 24),
@@ -61,6 +74,10 @@ private extension ToolsBarView {
             scanButton.widthAnchor.constraint(equalToConstant: 24),
             scanButton.heightAnchor.constraint(equalToConstant: 24)
         ])
+    }
+    
+    @objc private func didTapBack() {
+        onBackTapped?()
     }
 }
 
@@ -85,6 +102,24 @@ private extension ToolsBarView {
         //（等同舊的 adjustsImageWhenHighlighted = false）
         button.configurationUpdateHandler = { btn in
             // 不論狀態都維持一致（避免系統自動變暗/變透明）
+            btn.alpha = 1
+        }
+    }
+    
+    func configureSystemBackButton() {
+        backButton.translatesAutoresizingMaskIntoConstraints = false
+        backButton.isUserInteractionEnabled = true
+        
+        var config = UIButton.Configuration.plain()
+        config.contentInsets = .zero
+        config.imagePadding = 0
+        config.baseBackgroundColor = .clear
+        config.background.backgroundColor = .clear
+        config.image = UIImage(systemName: "chevron.left")
+        backButton.configuration = config
+        backButton.tintColor = .label
+        
+        backButton.configurationUpdateHandler = { btn in
             btn.alpha = 1
         }
     }

@@ -34,6 +34,20 @@ final class FriendsContainerViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupLayout()
         embed(contentViewController, in: containerView)
+        
+        headerView.onBackTapped = { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: false)
     }
     
     override func viewDidLayoutSubviews() {

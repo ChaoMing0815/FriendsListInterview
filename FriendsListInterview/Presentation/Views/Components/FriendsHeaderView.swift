@@ -10,16 +10,18 @@ import UIKit
 
 final class FriendsHeaderView: UIView {
     // MARK: - UI Components
-
     private let toolsBarView = ToolsBarView()
     private let userInfoView = UserInfoView()
 
+    var onBackTapped: (() -> Void)?
+    
     // MARK: - Init
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
         setupConstraints()
+        
+        toolsBarView.onBackTapped = { [weak self] in self?.onBackTapped?() }
 
         // Demo data for UI preview (no API required)
         userInfoView.configure(name: "蔡國泰", kokoID: "Mike")

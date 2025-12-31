@@ -1,294 +1,288 @@
-# Technical Design Document (TDD)
+# 技術設計文件（TDD）
 
-## 1. Overview
+## 1. 文件目的（Overview）
 
-### 文件目的
-本文件旨在說明 **FriendsListInterview** 專案的技術設計與架構決策，  
-重點在於展示：
+本文件說明 **FriendsListInterview** 專案的技術設計與架構決策。
 
-- 清楚的分層架構設計
-- 狀態驅動的 UI 呈現方式
-- 可維護、可測試的 UIKit 專案結構
+此專案為 iOS 面試作業，重點不在功能完整度，而在於：
 
-本文件定位為 **技術設計文件（Technical Design Document）**，  
-供工程師、Reviewer 或面試官理解本專案的設計思路與取捨。
+- 架構清晰度  
+- 職責分離  
+- 狀態驅動 UI  
+- 可維護的 UIKit 實作  
+- 可測試的 ViewModel 與商業邏輯  
 
-### 文件適用範圍
-- 本文件僅對齊「最終提交版本」的實際程式碼
-- 不包含討論階段中曾評估但未採用的方案
-- 不提供產品規格或使用者需求文件（PRD）
-
-### 對齊的實作版本
-- UIKit + Auto Layout
-- MVVM + Clean Architecture（簡化版）
-- 狀態驅動 UI
-- 無 Storyboard
-- 無 Combine、無 SwiftUI、無 async/await
+專案採用 **UIKit + MVVM**，並遵循 **Clean Architecture** 的分層概念。
 
 ---
 
-## 2. Project Scope & Non-Goals
+## 2. 專案範圍與非目標（Scope & Non-Goals）
 
-### 專案目標
-本專案為 iOS 面試作業，目標在於：
+### 專案涵蓋範圍（In Scope）
 
-- 展示清楚的架構分層與責任劃分
-- 示範狀態驅動 UI 的實作方式
-- 確保專案具備可維護性與可測試性
-- 提供可用於面試說明的 Demo App
+- 好友列表多情境顯示  
+  - 無好友（Empty）  
+  - 僅好友列表  
+  - 好友列表 + 邀請卡片  
+- 可展開 / 收合的好友邀請卡（CollectionView）  
+- 好友搜尋功能（支援搜尋置頂 / 還原）  
+- 自訂 Header 與 ToolsBar（取代系統 NavigationBar）  
+- 以 ViewModel 狀態驅動 UI 呈現  
+- 單元測試與 Code Coverage 設定  
 
-### 功能範圍（Scope）
-- 好友列表顯示
-- 多情境狀態切換：
-  - 無好友（Empty）
-  - 僅好友
-  - 好友 + 邀請
-- 邀請卡片展開 / 收合
-- 好友搜尋（含搜尋置頂與還原）
-- 自訂 Header / ToolsBar
-- 單元測試與 Code Coverage
+### 明確不在範圍內（Out of Scope）
 
-### 非目標（Non-Goals）
-以下項目**明確不在本專案範圍內**：
+以下項目刻意不實作，以保持架構展示的聚焦：
 
-- 商業邏輯完整度
-- 真實後端整合
-- UI Test / E2E Test
-- 效能最佳化
-- SwiftUI / Combine / async-await
-- 資料快取與持久化
+- Production 等級的網路錯誤處理  
+- 快取 / 本地儲存  
+- 分頁（Pagination）  
+- Combine / SwiftUI  
+- 商業級 UI 錯誤提示  
 
 ---
 
-## 3. High-Level Architecture
+## 3. 高階架構設計（High-Level Architecture）
 
-### 架構選型
-本專案採用：
+### 對應文件
+- docs/HLDUML.drawio.png
 
-- UIKit
-- MVVM
-- Clean Architecture（Presentation / Domain / Data）
+本專案採用三層式架構：
+```
+Presentation（表現層）
+└─ ViewController
+└─ ViewModel（透過 Protocol）
 
-### 分層說明
+Domain（領域層）
+└─ UseCases
+└─ Domain Models
 
-#### Presentation Layer
-- ViewController
-- ViewModel（透過 Protocol）
-- 負責 UI 呈現與使用者互動
+Data（資料層）
+└─ Repository（透過 Protocol）
+└─ API Service（透過 Protocol）
+```
 
-#### Domain Layer
-- 純商業邏輯
-- Domain Model
-- UseCase
+### 核心設計原則
 
-#### Data Layer
-- Repository（透過 Protocol）
-- API Service（透過 Protocol）
-- DTO → Domain Model 轉換
+- 上層只依賴抽象（Protocol）  
+- UIKit 不得滲透進 Domain  
+- 資料來源細節對上層完全隱藏  
+- 狀態由 ViewModel 單一來源管理  
 
-### 高階依賴方向
-
-Presentation  
-↓  
-Domain  
-↓  
-Data
-
-- 依賴只允許單向向下，禁止反向依賴。
-
-### HLD UML 設計原則
-- 上層僅依賴抽象（Protocol）
-- 具體實作（DefaultXXX）位於最外層
-- 狀態（State）不視為架構實體，因此不納入 HLD
+> 內部 UI 狀態（如 `empty / content`）屬於 ViewModel 的實作細節，不視為架構實體，因此不納入 HLD UML。
 
 ---
 
-## 4. State-Driven UI Design
+## 4. 狀態驅動 UI 設計（State-Driven UI）
 
-### ViewModel 狀態定義
-UI 顯示完全由 ViewModel 狀態驅動，例如：
+UI 完全由 `FriendsListState` 驅動：
 
-- Loading
-- Empty
-- Content（含或不含邀請）
+```swift
+enum FriendsListState {
+    case loading
+    case empty
+    case content(
+        invitations: [Friend],
+        friends: [Friend]
+    )
+}
+```
+## 狀態與 UI 對應關係
 
-### 狀態與 UI 呈現關係
-- ViewController 僅根據狀態切換 UI
-- 不直接判斷資料內容來控制畫面
+| 狀態 | UI 行為 |
+|---|---|
+| loading | 顯示 loading indicator |
+| empty | 顯示 EmptyStateView |
+| content | 顯示好友列表與邀請卡 |
 
-### 為何狀態不納入 HLD UML
-- 狀態為 ViewModel 內部實作細節
-- 不屬於系統層級的架構元件
-- 納入 UML 會降低高階架構的可讀性
-
-### 狀態驅動的優點與取捨
-**優點**
-- UI 行為可預測
-- 狀態集中管理
-- 易於測試
-
-**取捨**
-- ViewModel 責任較重
-- 初期設計成本較高
+ViewController 只負責 render 狀態，不自行推論 UI 條件。
 
 ---
 
-## 5. Presentation Layer Design
+## 5. Presentation Layer（表現層）
 
-### ViewController 職責劃分
+### ViewControllers
 
 #### ScenarioSelectorViewController
-- Demo 專用入口
-- 切換不同好友情境
+- Demo 入口頁
+- 用於切換不同好友情境（面試展示用途）
 
 #### FriendsContainerViewController
-- 自訂 Header（取代 NavigationBar）
-- 內容容器管理
+負責整體畫面容器：
+- 自訂 Header（ToolsBar + UserInfo）
+- 取代系統 NavigationBar
+- 內嵌內容 ViewController
 - 底部 TabBar
+- Header 收合 / 展開動畫
 
 #### FriendsListViewController
-- 好友列表 UI
+主要列表畫面，負責：
 - 綁定 ViewModel 狀態
+- Empty / Content UI 切換
 - 搜尋與捲動互動
-- Empty / Content 切換
+- 邀請列表與 Segment 顯示控制
 
-### ViewModel 與 Protocol 設計
-- ViewController 僅持有 ViewModel Protocol
-- 實際 ViewModel 注入於初始化階段
+### ViewModel
 
-### View 與 ViewModel 綁定方式
-- Callback / Closure
-- 無使用 Reactive Framework
+#### FriendsListViewModel
+- 遵循 FriendsListViewModelProtocol
 
-### Presentation Layer 設計約束
-- 不包含商業邏輯
-- 不直接呼叫 Repository 或 API
-- 僅負責 UI 與互動
+主要職責：
+- 載入資料
+- DTO → Domain Model 轉換
+- 管理 FriendsListState
+- 透過 callback 通知 ViewController 更新 UI
 
+ViewController 僅依賴 Protocol，有助於：
+- 單元測試
+- Mock 注入
+- 降低耦合
+  
 ---
 
-## 6. Domain Layer Design
+## 6. Domain Layer（領域層）
 
-### Domain Layer 設計原則
-- 純 Swift
-- 不依賴 UIKit
-- 不知道資料來源
+Domain 層僅包含純商業邏輯，不依賴 UIKit 或資料來源。
 
 ### Domain Model
-- `Friend`
-  - 核心業務模型
-  - 提供 ViewModel 與 UseCase 使用
 
-### UseCase 設計
+#### Friend
+- 核心業務模型
+- 供 UseCase 與 ViewModel 使用
+- 不包含 API 或 UI 相關資訊
+
+### 對應檔案
+- Domain/Models/Friend.swift
+
+### UseCases
 
 #### MergeFriendsUseCase
 - 合併好友與邀請資料
-- 輸出統一 Domain Model
+- 輸出統一的 Domain Model 結構
 
 #### SearchFriendsUseCase
-- 封裝搜尋邏輯
-- 避免 UI 層自行實作搜尋規則
+- 封裝好友搜尋邏輯
+- 避免搜尋規則散落在 UI 層
+  
+---
 
-### 為何集中商業邏輯於 UseCase
-- 降低 ViewModel 複雜度
-- 提高可測試性
-- 提供邏輯重用性
+## 7. Data Layer（資料層）
+
+### Repository
+- FriendsRepository（Protocol）
+- DefaultFriendsRepository（實作）
+
+職責：
+- 透過 API Service 取得資料
+- 將 DTO 轉換為 Domain Model
+- 對上層隱藏資料來源細節
+
+Repository 僅依賴抽象的 API Service Protocol。
+
+### API Service
+- FriendsAPIService（Protocol）
+- DefaultFriendsAPIService（實作）
+
+職責：
+- 發送網路請求
+- 解析 API 回傳資料為 DTO
+
+具體實作透過 Protocol 隔離，以利測試與替換。
 
 ---
 
-## 7. Data Layer Design
+## 8. 依賴規則（Dependency Rules）
 
-### Repository 抽象設計
-- `FriendsRepository`（Protocol）
-- `DefaultFriendsRepository`（實作）
+### 允許的依賴方向
 
-**職責**
-- 取得資料
-- DTO → Domain Model 轉換
-- 隱藏資料來源細節
+```
+ViewController
+ → ViewModel
+ → UseCase
+ → Repository
+ → API Service
+```
 
-### API Service 抽象設計
-- `FriendsAPIService`（Protocol）
-- `DefaultFriendsAPIService`（實作）
+### 明確禁止的依賴
+- ViewController → Repository
+- UseCase → UIKit
+- Repository → ViewController
+- API Service → Domain / UI
 
-**職責**
-- 網路請求
-- DTO 解析
-
-### DTO 與 Domain Model 轉換責任
-- 轉換責任放在 Repository
-- Domain Layer 不認識 DTO
+此規則確保 Dependency Inversion 與層級清晰。
 
 ---
 
-## 8. Dependency Rules
+## 9. UI 實作重點（UI Implementation Notes）
 
-### 合法依賴方向
-- ViewController → ViewModel Protocol
-- ViewModel → UseCase
-- UseCase → Repository Protocol
-- Repository → API Service Protocol
+- 純 UIKit + Auto Layout（無 Storyboard）
+- 自訂 ToolsBar 取代 NavigationBar
+- Empty State 使用 tableView.backgroundView
+- 搜尋列支援置頂與還原
+- 所有版面變化皆透過 Constraint 動畫實作
 
-### 禁止的依賴方向
-- ViewController → Repository / API
-- UseCase → UI
-- Repository → UI / ViewModel
-- API → Domain / Presentation
-
-### Dependency Inversion 實作方式
-- 上層定義 Protocol
-- 下層提供實作
-- 透過初始化注入
-
-### 為何以 Protocol 作為邊界
-- 易於 Mock
-- 易於測試
-- 可替換實作
+### 對應檔案
+- Presentation/Views/FriendsHeaderView.swift
+- Presentation/Views/ToolsBarView.swift
+- Presentation/Views/FriendsSearchHeaderView.swift
+- Presentation/Views/InvitationCollectionView.swift
+- Presentation/Views/FriendCell.swift
+- Presentation/Views/EmptyStateView.swift
 
 ---
 
-## 9. UI Implementation Notes
+## 10. 測試策略（Testing Strategy）
 
-### UIKit + Auto Layout
-- 全程使用 Auto Layout
-- 無 Storyboard
+已建立 Unit Tests
 
-### 自訂 Header / ToolsBar
-- 取代系統 NavigationBar
-- 提供更高的 UI 控制彈性
-
-### 搜尋列互動
-- 搜尋時 Header 收合
-- 結束搜尋自動還原
-
-### 邀請卡片設計
-- CollectionView
-- 支援展開 / 收合
-- 高度由內容驅動
-
-### Constraint Animation 原則
-- 所有動畫以 Constraint 變化實作
-- 保持畫面一致性
-
----
-
-## 10. Testing Strategy
-
-### Unit Test 範圍
-- ViewModel 狀態轉換
+### 對應檔案
+- FriendsListInterviewTests/DefaultFriendsAPIServiceTests.swift
+- FriendsListInterviewTests/DefaultFriendsRepositoryTests.swift
+- FriendsListInterviewTests/MergeFriendsUseCaseTests.swift
+- FriendsListInterviewTests/FriendsListViewModelTests.swift
+  
+測試範圍包含：
+- ViewModel 邏輯
 - UseCase 行為
 - Repository 資料轉換
 
-### 測試責任劃分
-- ViewModel：狀態邏輯
-- UseCase：商業邏輯
-- Repository：資料轉換正確性
+Xcode Scheme 已開啟 Code Coverage
 
-### Code Coverage
-- Xcode Scheme 已啟用
-- 可於 Test Navigator → Coverage 查看
+Coverage 可於以下位置查看：
 
-### 未納入 UI Test 的原因
-- 面試作業範圍限制
-- 重點在架構而非 UI 自動化
+```
+Xcode → Test Navigator → Coverage
+```
+
+本專案未包含 UI Test。
+
+---
+
+## 11. 設計取捨與決策說明（Trade-offs）
+
+### 為何選擇 UIKit？
+- 對複雜 Layout 與動畫掌控度高
+- 貼近多數現有 production codebase
+
+### 為何不使用 Combine / async 架構？
+- 降低面試作業的認知負擔
+- 聚焦在架構與責任分離
+
+### 為何使用 State Enum？
+- 避免多個 boolean value 組合錯誤
+- UI 狀態明確、可測試
+
+---
+
+## 總結
+
+本專案的設計重點在於：
+- 清楚的架構邊界
+- 狀態驅動 UI
+- 可測試、可維護的 UIKit 架構
+- 明確的依賴方向與責任分離
+
+而非商業功能的完整實作。
+
+
 

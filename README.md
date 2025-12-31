@@ -53,9 +53,7 @@ Data
 
 ## 高階設計（HLD）
 
-<p align="center">
-  <img src="docs/diagrams/HLDUML.drawio.png" width="720" />
-</p>
+<img src="docs/diagrams/HLDUML.drawio.png?v=2" width="720" />
 
 HLD UML 圖說明了以下設計原則：
 
